@@ -192,6 +192,7 @@ def _prepare_seq_groups(
     # Total number of prompts from given sequence groups.
     num_prompts = 0
 
+    # print(f"sm seq group metadata: {seq_group_metadata_list}")
     for i, seq_group_metadata in enumerate(seq_group_metadata_list):
         seq_ids = list(seq_group_metadata.seq_data.keys())
         sampling_params = seq_group_metadata.sampling_params
@@ -213,6 +214,7 @@ def _prepare_seq_groups(
             num_prefill_sample = len(seq_ids)
             assert num_prefill_sample == 1
             assert query_lens is not None and seq_lens is not None
+            print(f"query_lens: {query_lens}, seq_lens: {seq_lens}")
             query_len, seq_len = query_lens[i], seq_lens[i]
             # If we need sampling, exclude num_prefill_sample tokens from
             # prompt logprob.

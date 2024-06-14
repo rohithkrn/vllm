@@ -468,6 +468,7 @@ class Scheduler:
                 if curr_loras is not None and seq_group.lora_int_id > 0:
                     curr_loras.add(seq_group.lora_int_id)
 
+        print(f"[sr]running_queue: {running_queue}, \n decode_seq_groups: {decode_seq_groups}, \n prefill_seq_groups: {prefill_seq_groups}")
         return running_queue, SchedulerRunningOutputs(
             decode_seq_groups=decode_seq_groups,
             prefill_seq_groups=prefill_seq_groups,
@@ -580,6 +581,9 @@ class Scheduler:
 
         swapped_queue.extendleft(leftover_swapped)
 
+        print(f"[ss] decode_seq_groups: {decode_seq_groups}, \n prefill_seq_groups: {prefill_seq_groups}")
+
+
         return swapped_queue, SchedulerSwappedInOutputs(
             decode_seq_groups=decode_seq_groups,
             prefill_seq_groups=prefill_seq_groups,
@@ -675,6 +679,7 @@ class Scheduler:
                 lora_int_id = seq_group.lora_int_id
                 assert curr_loras is not None
                 assert self.lora_config is not None
+                print(f"curr_loras_len: {len(curr_loras)}, mx_loras: {self.lora_config.max_loras}")
                 if (self.lora_enabled and lora_int_id > 0
                         and lora_int_id not in curr_loras
                         and len(curr_loras) >= self.lora_config.max_loras):
@@ -706,6 +711,8 @@ class Scheduler:
         if len(seq_groups) > 0:
             self.prev_prompt = True
 
+        print(f"[sp]seq groups: {seq_groups}, ignored_seq_groups: {ignored_seq_groups}")
+
         return waiting_queue, SchedulerPrefillOutputs(
             seq_groups=seq_groups,
             ignored_seq_groups=ignored_seq_groups,
@@ -732,6 +739,8 @@ class Scheduler:
         curr_loras = set(
             seq_group.lora_int_id
             for seq_group in self.running) if self.lora_enabled else None
+        
+        print(f"curr loras in sd: {curr_loras}")
 
         remaining_waiting, prefills = (self.waiting,
                                        SchedulerPrefillOutputs.create_empty())
@@ -821,7 +830,7 @@ class Scheduler:
             max_num_seqs=self.scheduler_config.max_num_seqs,
         )
         curr_loras: Set[int] = set()
-
+        print(f"curr loras in cp: {curr_loras}")
         remaining_waiting, prefills = (self.waiting,
                                        SchedulerPrefillOutputs.create_empty())
         remaining_running, running_scheduled = (
@@ -870,6 +879,7 @@ class Scheduler:
         # Update swapped requests.
         self.swapped = remaining_swapped
         self.swapped.extend(running_scheduled.swapped_out)
+        print(f"cp, prefills: {prefills.seq_groups}, running: {running_scheduled.decode_seq_groups}")
         return SchedulerOutputs(
             scheduled_seq_groups=(prefills.seq_groups +
                                   running_scheduled.prefill_seq_groups +
@@ -920,13 +930,14 @@ class Scheduler:
         # This function call changes the internal states of the scheduler
         # such as self.running, self.swapped, and self.waiting.
         scheduler_outputs = self._schedule()
+        # print(f"scheduler_outputs: {scheduler_outputs.scheduled_seq_groups}")
         now = time.time()
-
         # Create input data structures.
         seq_group_metadata_list: List[SequenceGroupMetadata] = []
         for i, scheduled_seq_group in enumerate(
                 scheduler_outputs.scheduled_seq_groups):
             seq_group = scheduled_seq_group.seq_group
+            print(f"seq_group id: {seq_group.request_id}")
             token_chunk_size = scheduled_seq_group.token_chunk_size
             seq_group.maybe_set_first_scheduled_time(now)
 
