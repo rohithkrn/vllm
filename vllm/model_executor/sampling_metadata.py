@@ -210,17 +210,16 @@ def _prepare_seq_groups(
                 seq_group_metadata.state.generator = torch.Generator(
                     device=device).manual_seed(sampling_params.seed)
 
-            num_prompts += 1
             num_prefill_sample = len(seq_ids)
             assert num_prefill_sample == 1
             assert query_lens is not None and seq_lens is not None
-            print(f"query_lens: {query_lens}, seq_lens: {seq_lens}")
-            query_len, seq_len = query_lens[i], seq_lens[i]
+            query_len, seq_len = query_lens[num_prompts], seq_lens[num_prompts]
             # If we need sampling, exclude num_prefill_sample tokens from
             # prompt logprob.
             prompt_logprob_len = (query_len - num_prefill_sample
                                   if do_sample else query_len)
             sample_len = num_prefill_sample if do_sample else 0
+            num_prompts += 1
         else:
             # Decode
             prompt_logprob_len = 0
