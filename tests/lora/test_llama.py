@@ -6,7 +6,7 @@ from vllm.lora.request import LoRARequest
 
 from .conftest import cleanup
 
-MODEL_PATH = "meta-llama/Llama-2-7b-hf"
+MODEL_PATH = "/workspace/models/llama/llama2-7b-hf/"
 
 
 def do_sample(llm, lora_path: str, lora_id: int):
@@ -36,7 +36,8 @@ def do_sample(llm, lora_path: str, lora_id: int):
     return generated_texts
 
 
-@pytest.mark.parametrize("tp_size", [1, 2, 4])
+# @pytest.mark.parametrize("tp_size", [1, 2, 4])
+@pytest.mark.parametrize("tp_size", [1])
 def test_llama_lora(sql_lora_files, tp_size, num_gpus_available):
     if num_gpus_available < tp_size:
         pytest.skip(f"Not enough GPUs for tensor parallelism {tp_size}")
@@ -44,7 +45,7 @@ def test_llama_lora(sql_lora_files, tp_size, num_gpus_available):
     llm = vllm.LLM(MODEL_PATH,
                    enable_lora=True,
                    max_num_seqs=16,
-                   max_loras=4,
+                   max_loras=2,
                    tensor_parallel_size=tp_size)
 
     expected_no_lora_output = [

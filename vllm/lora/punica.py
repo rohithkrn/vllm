@@ -11,6 +11,7 @@ def _check_punica_support():
     if ops.is_custom_op_supported("_punica_C::dispatch_bgmv"):
         return
 
+    # import pdb; pdb.set_trace()
     if torch.cuda.get_device_capability() < (8, 0):
         raise ImportError(
             "punica LoRA kernels require compute capability >= 8.0")

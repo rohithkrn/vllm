@@ -62,6 +62,7 @@ class SchedulingBudget:
                 and self.num_curr_seqs + num_new_seqs <= self.max_num_seqs)
 
     def remaining_token_budget(self):
+        # logger.info(f"token_budget: {self.token_budget}, num_batched_tokens: {self.num_batched_tokens}")
         return self.token_budget - self.num_batched_tokens
 
     def add_num_batched_tokens(self, req_id: str, num_batched_tokens: int):
@@ -843,6 +844,8 @@ class Scheduler:
             token_budget=self.scheduler_config.max_num_batched_tokens,
             max_num_seqs=self.scheduler_config.max_num_seqs,
         )
+        # logger.info(f"scheduling budget: {budget}")
+
         curr_loras: Set[int] = set()
 
         remaining_waiting, prefills = (self.waiting,

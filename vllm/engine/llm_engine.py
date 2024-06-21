@@ -761,6 +761,15 @@ class LLMEngine:
         """
         seq_group_metadata_list, scheduler_outputs = self.scheduler.schedule()
 
+        for seq_group_metadata in seq_group_metadata_list:
+            logger.info(f"seq_group_metadata -  id: {seq_group_metadata.request_id}, "
+                        f"lora_request: {seq_group_metadata.lora_request}, "
+                        f"token_chunk_size: {seq_group_metadata.token_chunk_size}")
+        
+            
+        logger.info(f"\nscheduler_outputs - scheduled: {scheduler_outputs.scheduled_seq_groups}, "
+                    f"ignored: {scheduler_outputs.ignored_seq_groups}\n")
+
         if not scheduler_outputs.is_empty():
             execute_model_req = ExecuteModelRequest(
                 seq_group_metadata_list=seq_group_metadata_list,
@@ -775,9 +784,21 @@ class LLMEngine:
         else:
             output = []
 
+        # import pdb;pdb.set_trace()
+
+        logger.info(f"model output len: {len(output)}")
+        for o in output:
+            for oo in o.outputs:
+                logger.info(f"model output - len: {len(o.outputs)}, out: {oo.samples}")
+        print("\n")
         request_outputs = self._process_model_outputs(
             output, scheduler_outputs.scheduled_seq_groups,
             scheduler_outputs.ignored_seq_groups, seq_group_metadata_list)
+
+        # import pdb;pdb.set_trace()
+
+        for request_output in request_outputs:
+            logger.info(f"request output - id: {request_output.request_id} , output: {request_output.outputs[0].text}")
 
         # Log stats.
         self.do_log_stats(scheduler_outputs, output)
@@ -790,6 +811,7 @@ class LLMEngine:
             # queued control plane messages, such as add/remove lora adapters.
             self.model_executor.stop_remote_worker_execution_loop()
 
+        print("-------------------------------------------------------------------------------")
         return request_outputs
 
     def do_log_stats(

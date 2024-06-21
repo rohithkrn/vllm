@@ -722,6 +722,16 @@ class ModelRunner:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_kwargs
          ) = self.prepare_input_tensors(seq_group_metadata_list)
+        
+        logger.info(
+                    f"input_tokens: {input_tokens}, "
+                    f"input_positions: {input_positions}, ",
+                    f"attn_metadata: {attn_metadata}, "
+                    f"sampling_metadata: {sampling_metadata}, "
+                    f"lora_requests: {lora_requests}, ",
+                    f"lora_mapping: {lora_mapping}, "
+                    f"multi_modal_kwargs: {multi_modal_kwargs}"
+                    )
 
         if self.lora_config:
             self.set_active_loras(lora_requests, lora_mapping)
