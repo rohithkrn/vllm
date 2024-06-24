@@ -463,6 +463,7 @@ class ColumnParallelLinearWithLoRA(BaseLayerWithLoRA):
             - output
             - bias
         """
+        print(f"[cpll]indices: {self.indices.cpu()}, indices_len: {self.indices_len}")
         bias = (self.base_layer.bias
                 if not self.base_layer.skip_bias_add else None)
 
@@ -1230,6 +1231,7 @@ class LogitsProcessorWithLoRA(BaseLayerWithLoRA):
         return logits
 
     def forward(self, *args, **kwargs):
+        print(f"[lpl]indices: {self.indices.cpu()}, indices_padded: {self.indices_padded.cpu()}, indices_len: {self.indices_len}")
         return type(self.base_layer).forward(self, *args, **kwargs)
 
     @classmethod

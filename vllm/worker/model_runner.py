@@ -1,4 +1,5 @@
 import gc
+import os
 import time
 import warnings
 from collections import defaultdict
@@ -141,6 +142,7 @@ class ModelRunner:
         self.flashinfer_workspace_buffer: torch.Tensor
         # Set after load_model.
         self.lora_manager: Optional[LRUCacheWorkerLoRAManager] = None
+        self.step = 0
 
     def load_model(self) -> None:
         with CudaMemoryProfiler() as m:
@@ -718,20 +720,22 @@ class ModelRunner:
         self,
         seq_group_metadata_list: Optional[List[SequenceGroupMetadata]],
         kv_caches: List[torch.Tensor],
+        prof = True,
     ) -> Optional[SamplerOutput]:
         (input_tokens, input_positions, attn_metadata, sampling_metadata,
          lora_requests, lora_mapping, multi_modal_kwargs
          ) = self.prepare_input_tensors(seq_group_metadata_list)
         
-        logger.info(
-                    f"input_tokens: {input_tokens}, "
-                    f"input_positions: {input_positions}, ",
-                    f"attn_metadata: {attn_metadata}, "
-                    f"sampling_metadata: {sampling_metadata}, "
-                    f"lora_requests: {lora_requests}, ",
-                    f"lora_mapping: {lora_mapping}, "
-                    f"multi_modal_kwargs: {multi_modal_kwargs}"
-                    )
+        if not prof and os.environ.get("LOG_MODEL_INPUTS", False):
+            logger.info(
+                        f"input_tokens: {input_tokens}, "
+                        f"input_positions: {input_positions}, ",
+                        f"attn_metadata: {attn_metadata}, "
+                        f"sampling_metadata: {sampling_metadata}, "
+                        f"lora_requests: {lora_requests}, ",
+                        f"lora_mapping: {lora_mapping}, "
+                        f"multi_modal_kwargs: {multi_modal_kwargs}"
+                        )
 
         if self.lora_config:
             self.set_active_loras(lora_requests, lora_mapping)
@@ -753,8 +757,15 @@ class ModelRunner:
             **multi_modal_kwargs,
         )
 
+        tensor_path = os.environ.get("TENSOR_PATH", None)
+        if tensor_path and not prof:
+            torch.save(hidden_states, os.path.join(tensor_path, f"hs_{self.step}.pt"))
+
         # Compute the logits.
         logits = self.model.compute_logits(hidden_states, sampling_metadata)
+
+        if tensor_path and not prof:
+            torch.save(logits, os.path.join(tensor_path, f"logits_{self.step}.pt"))
 
         # Only perform sampling in the driver worker.
         if not self.is_driver_worker:
@@ -766,6 +777,8 @@ class ModelRunner:
             sampling_metadata=sampling_metadata,
         )
 
+        if not prof:
+            self.step += 1
         return output
 
     @torch.inference_mode()

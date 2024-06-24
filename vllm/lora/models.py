@@ -533,6 +533,8 @@ class LoRAModelManager:
                                         self.lora_slots + 1, self.vocab_size,
                                         self.lora_config.lora_extra_vocab_size,
                                         self.long_lora_context)
+
+        
         self.base_indices[:base_indices.shape[0]].copy_(base_indices)
         self.sampler_indices[:sampler_indices.shape[0]].copy_(sampler_indices)
         self.sampler_indices_padded[:sampler_indices_padded.shape[0]].copy_(
@@ -547,6 +549,7 @@ class LoRAModelManager:
             self.long_lora_indices.zero_()
         # Maintain the reference
         self.indices_len[:] = indices_len
+        print(f"[m] base_indices: {self.base_indices.cpu()}, sampler_indices: {self.sampler_indices.cpu()}")
 
     def set_lora_mapping(self, lora_mapping: LoRAMapping) -> None:
         if self._last_mapping != lora_mapping:

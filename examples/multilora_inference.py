@@ -156,6 +156,7 @@ def initialize_engine() -> LLMEngine:
                             #  enable_chunked_prefill=True,
                              max_model_len=2048,
                              gpu_memory_utilization=0.65,
+                             enforce_eager=True,
                              )
     return LLMEngine.from_engine_args(engine_args)
 

@@ -270,7 +270,8 @@ class Worker(WorkerBase):
             return []
 
         output = self.model_runner.execute_model(seq_group_metadata_list,
-                                                 self.gpu_cache)
+                                                 self.gpu_cache,
+                                                 prof=False)
 
         # Worker only supports single-step execution. Wrap the output in a list
         # to conform to interface.
